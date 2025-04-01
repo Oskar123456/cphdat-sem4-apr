@@ -1,4 +1,4 @@
-
+import searchandsort.MyExamples;
 import searchandsort.BigOExamples;
 import searchandsort.SearchExamples;
 import searchandsort.SortExamples;
@@ -12,7 +12,9 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
+        MyExamples.doTest(15);
     }
 
     private static void testComplexity() {
