@@ -49,16 +49,16 @@ public class Main
         List<Integer[]> ret_intervals = new ArrayList<>();
         List<Integer[]> input_intervals = new ArrayList<>();
         for (int i = 0; i < intervals.length; ++i) {
-            ret_intervals.add(new Integer[] { intervals[i][0], intervals[i][1] });
+            input_intervals.add(new Integer[] { intervals[i][0], intervals[i][1] });
         }
 
-        for (int i = 0; i < intervals.length; ++i) {
-            int delete_at;
+        for (int i = 0; i < input_intervals.size(); ++i) {
+            int delete_at = 0;
             boolean should_add = true;
             for (int j = 0; j < ret_intervals.size(); j++) {
-                int[] ival = ret_intervals.get(i);
-                int i_lo = intervals[i][0];
-                int i_hi = intervals[i][1];
+                Integer[] ival = ret_intervals.get(j);
+                int i_lo = input_intervals.get(i)[0];
+                int i_hi = input_intervals.get(i)[1];
 
                 if ((i_lo <= ival[0] && ival[0] <= i_hi)
                         || (i_lo <= ival[1] && ival[1] <= i_hi)
@@ -69,37 +69,16 @@ public class Main
                     should_add = false;
                     delete_at = j;
                     input_intervals.add(ival);
-
-                    System.out.printf("[%d, %d] was merged...%n",  intervals[i][0], intervals[i][1] );
-                    // for (var _ival : ret_intervals) {
-                    //     System.out.printf("[%d, %d] ", _ival[0], _ival[1]);
-                    // }
-                    // System.out.println();
-
                     break;
                         }
 
             }
             if (should_add) {
-                ret_intervals.add(new Integer[] { intervals[i][0], intervals[i][1] });
-
-                System.out.printf("[%d, %d] was added: ",  intervals[i][0], intervals[i][1] );
-                for (var ival : ret_intervals) {
-                    System.out.printf("[%d, %d] ", ival[0], ival[1]);
-                }
-                System.out.println();
+                ret_intervals.add(new Integer[] { input_intervals.get(i)[0], input_intervals.get(i)[1] });
+            } else {
+                ret_intervals.remove(delete_at);
             }
         }
-
-        for (var ival : intervals) {
-            System.out.printf("[%d, %d] ", ival[0], ival[1]);
-        }
-        System.out.println();
-
-        for (var ival : ret_intervals) {
-            System.out.printf("[%d, %d] ", ival[0], ival[1]);
-        }
-        System.out.println();
 
         int len = 0;
         for (var ival : ret_intervals) {
