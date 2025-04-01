@@ -76,12 +76,12 @@ public class SearchExamples {
 
     // Lineær søgning: prøver 1, 2, 3, ...
     public static void guessNumberLinearly() {
-
+        int n = scanner.nextInt();
     }
 
         // Binær søgning: deler søgeområdet og spørger større/mindre
     public static void guessNumberBinary() {
-
+        int n = scanner.nextInt();
     }
 
 
