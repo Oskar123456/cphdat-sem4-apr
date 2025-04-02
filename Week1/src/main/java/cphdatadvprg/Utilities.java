@@ -70,6 +70,16 @@ public class Utilities
         return a;
     }
 
+    public static Integer[] randomIArrayFull(int len)
+    {
+        Random rng = new Random(System.nanoTime());
+        Integer[] a = new Integer[len];
+        for (int i = 0; i < len; i++) {
+            a[i] = rng.nextInt() % 100000;
+        }
+        return a;
+    }
+
     public static String[] randomStrArray(int n)
     {
         Faker f = new Faker();
