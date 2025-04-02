@@ -1,17 +1,6 @@
 package cphdatadvprg;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.geom.*;
-import java.awt.geom.Rectangle2D.Float;
-import java.awt.Graphics2D.*;
+import java.util.*;
 
 /*
  *
@@ -21,171 +10,100 @@ import java.awt.Graphics2D.*;
 
 public class StepSorts
 {
-    public static <T> void heapSortGenericCmpr(T[] a, Comparator<T> cmpr)
+    public static <T> Queue<Integer[]> bubbleSort(T[] a, Comparator<T> cmpr, int[] n_cmprs)
     {
+        Queue<Integer[]> swaps = new ArrayDeque<>();
+
         int len = a.length;
-        int start = len / 2;
-        int end = len;
-        while (end > 1) {
-            heapifyGenericCmpr(a, end, cmpr);
-            --end;
-            swapGeneric(a, 0, end);
+        boolean swapped = true;
+        while (swapped) {
+            swapped = false;
+            for (int i = 1; i < len; i++) {
+                ++n_cmprs[0];
+                if (cmpr.compare(a[i - 1], a[i]) > 0) {
+                    swap(a, i - 1, i, swaps);
+                    swapped = true;
+                }
+            }
         }
+
+        return swaps;
     }
 
-    public static <T extends Comparable<T>> void heapSortGeneric(T[] a)
+    public static <T> Queue<Integer[]> heapSort(T[] a, Comparator<T> cmpr, int[] n_cmprs)
     {
-        int len = a.length;
-        int start = len / 2;
-        int end = len;
-        while (end > 1) {
-            heapifyGeneric(a, end);
-            --end;
-            swapGeneric(a, 0, end);
-        }
-    }
+        Queue<Integer[]> swaps = new ArrayDeque<>();
 
-    public static <T> void swapGeneric(T[] a, int i, int j)
-    {
-        T t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-    }
-
-    public static void swap(Integer[] a, int i, int j)
-    {
-        int t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-    }
-
-    public static void heapSort(Integer[] a)
-    {
         int end = a.length;
-        int start = end / 2;
+        int start = a.length / 2;
         while (end > 1) {
             if (start > 0) {
                 --start;
-            } else{
+            } else {
                 --end;
-                swap(a, end, 0);
+                swap(a, 0, end, swaps);
             }
             int root = start;
             while (root * 2 + 1 < end) {
                 int child = root * 2 + 1;
-                if (child + 1 < end && a[child] > a[child + 1]) {
-                    ++child;
+                n_cmprs[0]++;
+                if (child + 1 < end && cmpr.compare(a[child], a[child + 1]) <= 0) {
+                    child = child + 1;
                 }
-                if (a[root] > a[child]) {
-                    swap(a, root, child);
+                n_cmprs[0]++;
+                if (cmpr.compare(a[root], a[child]) <= 0) {
+                    swap(a, root, child, swaps);
                     root = child;
                 } else {
                     break;
                 }
             }
         }
+
+        return swaps;
     }
 
-    public static void heapSort2(Integer[] a)
+    public static <T> Queue<Integer[]> quickSort(T[] a, Comparator<T> cmpr, int[] n_cmprs)
     {
-        int len = a.length;
-        int start = len / 2;
-        int end = len;
-        while (end > 1) {
-            heapify(a, end);
-            --end;
-            swap(a, 0, end);
-        }
+        Queue<Integer[]> swaps = new ArrayDeque<>();
+        quickSortInternal(a, 0, a.length - 1, cmpr, n_cmprs, swaps);
+        return swaps;
     }
 
-    public static boolean verifySorted(Integer[] a)
+    private static <T> void quickSortInternal(T[] a, int lo, int hi, Comparator<T> cmpr, int[] n_cmprs, Queue<Integer[]> swaps)
     {
-        if (a.length < 2) {
-            return true;
+        if (lo >= hi || lo < 0) {
+            return;
         }
-        for (int i = 0; i < a.length - 1; i++) {
-            if (a[i] < a[i + 1]) {
-                return false;
-            }
-        }
-        return true;
+
+        int mid = quickSortPartitionInternal(a, lo, hi, cmpr, n_cmprs, swaps);
+
+        quickSortInternal(a, lo, mid - 1, cmpr, n_cmprs, swaps);
+        quickSortInternal(a, mid + 1, hi, cmpr, n_cmprs, swaps);
     }
 
-    public static boolean verifyHeap(Integer[] a)
+    private static <T> int quickSortPartitionInternal(T[] a, int lo, int hi, Comparator<T> cmpr, int[] n_cmprs, Queue<Integer[]> swaps)
     {
-        int len = a.length;
-        for (int i = 0; i < len; i++) {
-            int l = i * 2 + 1;
-            int r = i * 2 + 2;
-            if (l < len && a[i] >= a[l]) {
-                System.out.printf("not heap: a[%d] = %d <  a[%d] = %d is false%n", i, a[i], l, a[l]);
-                return false;
-            }
-            if (r < len && a[i] >= a[r]) {
-                System.out.printf("not heap: a[%d] = %d <  a[%d] = %d is false%n", i, a[i], r, a[r]);
-                return false;
+        T pivot = a[hi];
+        int pivot_idx = lo;
+
+        for (int i = lo; i < hi; i++) {
+            ++n_cmprs[0];
+            if (cmpr.compare(a[i], pivot) <= 0) {
+                swap(a, pivot_idx, i, swaps);
+                ++pivot_idx;
             }
         }
-        return true;
+
+        swap(a, pivot_idx, hi, swaps);
+        return pivot_idx;
     }
 
-    public static <T> void heapifyGenericCmpr(T[] a, int end, Comparator<T> cmpr)
+    public static <T> void swap(T[] a, int i, int j, Queue<Integer[]> q)
     {
-        int start = end / 2;
-        while (start-- > 0) {
-            int root = start;
-            while (root * 2 + 1 < end) {
-                int child = root * 2 + 1;
-                if (child + 1 < end && cmpr.compare(a[child], a[child + 1]) > 0) {
-                    ++child;
-                }
-                if (cmpr.compare(a[root], a[child]) > 0) {
-                    swapGeneric(a, root, child);
-                    root = child;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-
-    public static <T extends Comparable<T>> void heapifyGeneric(T[] a, int end)
-    {
-        int start = end / 2;
-        while (start-- > 0) {
-            int root = start;
-            while (root * 2 + 1 < end) {
-                int child = root * 2 + 1;
-                if (child + 1 < end && a[child].compareTo(a[child + 1]) > 0) {
-                    ++child;
-                }
-                if (a[root].compareTo(a[child]) > 0) {
-                    swapGeneric(a, root, child);
-                    root = child;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-
-    public static void heapify(Integer[] a, int end)
-    {
-        int start = end / 2;
-        while (start-- > 0) {
-            int root = start;
-            while (root * 2 + 1 < end) {
-                int child = root * 2 + 1;
-                if (child + 1 < end && a[child] > a[child + 1]) {
-                    ++child;
-                }
-                if (a[root] > a[child]) {
-                    swap(a, root, child);
-                    root = child;
-                } else {
-                    break;
-                }
-            }
-        }
+        q.add(new Integer[] { i, j });
+        T t = a[i];
+        a[i] = a[j];
+        a[j] = t;
     }
 }

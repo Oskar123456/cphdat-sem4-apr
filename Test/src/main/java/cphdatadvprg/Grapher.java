@@ -1,10 +1,6 @@
 package cphdatadvprg;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -27,13 +23,10 @@ class Grapher extends JPanel
     public int n_bars;
     public int delay_ms = 100;
 
-    Timer timer;
+    javax.swing.Timer timer;
+    Queue<Integer[]> swaps;
     long sort_state_start_ns, sort_state_end_ns, sort_state_total_ns;
     int sort_state_swap_i = -1, sort_state_swap_j = -1;
-    int bubble_sort_state_i, bubble_sort_state_j;
-    boolean bubble_sort_state_swapped;
-    int heap_sort_state_i, heap_sort_state_j;
-    boolean heap_sort_state_swapped;
 
     MainFrame container;
 
@@ -50,10 +43,9 @@ class Grapher extends JPanel
         setVisible(true);
     }
 
-    public void shuffle()
+    public Integer[] shuffle()
     {
         reset();
-
         rng = new Random(System.nanoTime());
         bars = new Integer[n_bars];
         bars_min = 0; bars_max = Math.max(n_bars / 2, 5);
@@ -61,6 +53,7 @@ class Grapher extends JPanel
             bars[i] = (Math.abs(rng.nextInt()) % (bars_max - 1)) + 1;
         }
         container.repaint(10);
+        return bars;
     }
 
     public void paint(Graphics graphics)
@@ -87,6 +80,20 @@ class Grapher extends JPanel
         }
     }
 
+    public void play(Queue<Integer[]> swaps)
+    {
+        this.swaps = swaps;
+        timer = new javax.swing.Timer(delay_ms, (ActionEvent e) -> {
+            if (swaps.size() < 1) {
+                reset();
+                return;
+            }
+            Integer[] swp = swaps.poll();
+            swap(swp[0], swp[1]);
+        });
+        timer.start();
+    }
+
     public boolean pause()
     {
         if (timer == null) {
@@ -99,68 +106,6 @@ class Grapher extends JPanel
             timer.start();
             return false;
         }
-    }
-
-    public void heapSort()
-    {
-        reset();
-        heap_sort_state_swapped = false;
-        timer = new Timer(delay_ms, (ActionEvent e) -> heapSortStep());
-        timer.start();
-    }
-
-    public void heapSortStep()
-    {
-        if (heap_sort_state_i == bars.length) {
-            if (!heap_sort_state_swapped) {
-                timer.stop();
-                timer = null;
-                reset();
-                // System.out.printf("heapSort completed in %dms%n", sort_state_total_ns / 1000000);
-                return;
-            } else {
-                heap_sort_state_swapped = false;
-                heap_sort_state_i = 1;
-            }
-        }
-
-        if (bars[heap_sort_state_i - 1] > bars[heap_sort_state_i]) {
-            swap(heap_sort_state_i - 1, heap_sort_state_i);
-            heap_sort_state_swapped = true;
-        }
-
-        ++heap_sort_state_i;
-    }
-
-    public void bubbleSort()
-    {
-        reset();
-        bubble_sort_state_swapped = false;
-        timer = new Timer(delay_ms, (ActionEvent e) -> bubbleSortStep());
-        timer.start();
-    }
-
-    public void bubbleSortStep()
-    {
-        if (bubble_sort_state_i == bars.length) {
-            if (!bubble_sort_state_swapped) {
-                timer.stop();
-                timer = null;
-                reset();
-                // System.out.printf("bubbleSort completed in %dms%n", sort_state_total_ns / 1000000);
-                return;
-            } else {
-                bubble_sort_state_swapped = false;
-                bubble_sort_state_i = 1;
-            }
-        }
-
-        if (bars[bubble_sort_state_i - 1] > bars[bubble_sort_state_i]) {
-            swap(bubble_sort_state_i - 1, bubble_sort_state_i);
-            bubble_sort_state_swapped = true;
-        }
-
-        ++bubble_sort_state_i;
     }
 
     public void swap(int i, int j)
@@ -185,10 +130,6 @@ class Grapher extends JPanel
         sort_state_start_ns = System.nanoTime();
         sort_state_swap_i = -1;
         sort_state_swap_j = -1;
-        bubble_sort_state_i = 1;
-        bubble_sort_state_j = 0;
-        heap_sort_state_i = 1;
-        heap_sort_state_j = 0;
 
         container.repaint();
     }

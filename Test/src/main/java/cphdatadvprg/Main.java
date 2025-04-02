@@ -1,10 +1,6 @@
 package cphdatadvprg;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -22,139 +18,51 @@ import com.github.javafaker.Faker;
 
 public class Main
 {
-    private static void createAndShowGUI()
-    {
-        MainFrame frame = new MainFrame("HelloWorldSwing");
-    }
-
-    public static void swap(int[] a, int i, int j)
-    {
-        int t = a[i];
-        a[i] = a[j];
-        a[j] = t;
-    }
-
-    public static void heapSort(int[] a)
-    {
-        int start = a.length / 2;
-        int end = a.length;
-        while (end > 1) {
-            if (start > 0) {
-                --start;
-            } else {
-                --end;
-                swap(a, 0, end);
-            }
-            int root = start;
-            while (2 * root + 1 < end) {
-                int child = 2 * root + 1;
-                if (child + 1 < end && a[child] > a[child + 1]) {
-                    child = child + 1;
-                }
-                if (a[root] > a[child]) {
-                    swap(a, root, child);
-                    root = child;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-
-    public static <T> void printArrayGeneric(T[] a)
-    {
-        int len = a.length;
-        System.out.printf("[");
-        for (int i = 0; i < len; i++) {
-            System.out.print(a[i]);
-            if (i < len - 1) {
-                System.out.printf(", ");
-            }
-        }
-        System.out.printf("]");
-    }
-
-    public static void printArray(Integer[] a)
-    {
-        int len = a.length;
-        System.out.printf("[");
-        for (int i = 0; i < len; i++) {
-            System.out.printf("%d", a[i]);
-            if (i < len - 1) {
-                System.out.printf(", ");
-            }
-        }
-        System.out.printf("]");
-    }
-
-    public static Integer[] randomArray(int n)
-    {
-        Random rng = new Random(System.nanoTime());
-        int len = Math.abs((rng.nextInt()) % n) + 1;
-        Integer[] a = new Integer[len];
-        for (int i = 0; i < len; i++) {
-            a[i] = rng.nextInt() % 100;
-        }
-        return a;
-    }
-
     public static void main(String[] args)
     {
-
-        int trials = 100;
-        for (int i = 0; i < trials; i++) {
-            Integer[] a = randomArray(25);
-            System.out.println();
-            printArrayGeneric(a);
-            // System.out.printf("%nheapSort:%n", args);
-            StepSorts.heapSortGeneric(a);
-            if (!StepSorts.verifySorted(a)) {
-                System.out.printf("PANICK NOT SORTED");
-            } else {
-                System.out.printf("  --> ");
-            }
-            // StepSorts.heapify(a);
-            // StepSorts.verifyHeap(a);
-            // heapSort(a);
-            printArrayGeneric(a);
-            System.out.println();
-        }
-
-        Faker f = new Faker();
-        for (int i = 0; i < trials; i++) {
-            int len = Math.abs(new Random(System.nanoTime()).nextInt()) % 25 + 1;
-            String[] strs = new String[len];
-            for (int j = 0; j < len; j++) {
-                strs[j] = f.name().firstName();
-            }
-            printArrayGeneric(strs);
-            StepSorts.heapSortGenericCmpr(strs, Comparator.naturalOrder());
-            System.out.printf("  --> ");
-            printArrayGeneric(strs);
-            System.out.println();
-
-            for (int j = 0; j < len - 1; j++) {
-                if (strs[j].compareTo(strs[j + 1]) < 0) {
-                    System.out.printf("PANICK NOT SORTED");
-                }
-            }
-        }
-
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
             }
         });
     }
+
+    private static void createAndShowGUI()
+    {
+        MainFrame frame = new MainFrame("HelloWorldSwing");
+    }
 }
 
 class MainFrame extends JFrame
 {
+    String str_mem = "";
+
+    Grapher grapher;
+    Benchmarker benchmarker;
+    JButton button_toggle_benchmarking;
+    JButton button_toggle_sorting;
+
     public long sort_param_delay_ms = 100;
 
     public void paint(Graphics graphics)
     {
         super.paint(graphics);
+    }
+
+    public void viewBenchmarks()
+    {
+        grapher.setVisible(false);
+        button_toggle_benchmarking.setVisible(false);
+        benchmarker.setVisible(true);
+        button_toggle_sorting.setVisible(true);
+    }
+
+    public void viewSorting()
+    {
+        benchmarker.setVisible(false);
+        button_toggle_sorting.setVisible(false);
+        grapher.setVisible(true);
+        button_toggle_benchmarking.setVisible(true);
     }
 
     public MainFrame(String name)
@@ -164,18 +72,18 @@ class MainFrame extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-
-        GroupLayout layout = new GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
+        GroupLayout layout_sorting = new GroupLayout(getContentPane());
+        getContentPane().setLayout(layout_sorting);
+        layout_sorting.setAutoCreateGaps(true);
+        layout_sorting.setAutoCreateContainerGaps(true);
 
         JLabel label = new JLabel("Sorting Algorithms");
         JLabel label2 = new JLabel("n: 15");
         JLabel label3 = new JLabel("sleep: 100ms");
         JLabel label4 = new JLabel("Bubble Sort");
 
-        Grapher grapher = new Grapher(this, 15);
+        grapher = new Grapher(this, 15);
+        benchmarker = new Benchmarker(this, 10000);
 
         JButton button_pause = new JButton("pause");
         button_pause.addActionListener((ActionEvent e) -> {
@@ -185,18 +93,43 @@ class MainFrame extends JFrame
                 button_pause.setText("pause");
             }
         });
-        JButton button = new JButton("Bubble Sort");
-        button.addActionListener((ActionEvent e) -> {
-            label4.setText("Bubble Sort");
-            grapher.bubbleSort();
+        JButton button_bubblesort = new JButton("Bubble Sort");
+        button_bubblesort.addActionListener((ActionEvent e) -> {
+            int[] n_cmprs = new int[1];
+            Integer[] bars = grapher.shuffle();
+            Integer[] bars_copy = Arrays.copyOf(bars, bars.length);
+            Queue<Integer[]> swaps = StepSorts.bubbleSort(bars_copy, Comparator.naturalOrder(), n_cmprs);
+            label4.setText("Bubble Sort (" + n_cmprs[0] + " comparisons, " + swaps.size() + " swaps)");
+            grapher.play(swaps);
         });
         JButton button_heapsort = new JButton("Heap Sort");
         button_heapsort.addActionListener((ActionEvent e) -> {
-            label4.setText("Heap Sort");
-            grapher.heapSort();
+            int[] n_cmprs = new int[1];
+            Integer[] bars = grapher.shuffle();
+            Integer[] bars_copy = Arrays.copyOf(bars, bars.length);
+            Queue<Integer[]> swaps = StepSorts.heapSort(bars_copy, Comparator.naturalOrder(), n_cmprs);
+            label4.setText("Bubble Sort (" + n_cmprs[0] + " comparisons, " + swaps.size() + " swaps)");
+            grapher.play(swaps);
+        });
+        JButton button_quicksort = new JButton("Quick Sort");
+        button_quicksort.addActionListener((ActionEvent e) -> {
+            int[] n_cmprs = new int[1];
+            Integer[] bars = grapher.shuffle();
+            Integer[] bars_copy = Arrays.copyOf(bars, bars.length);
+            Queue<Integer[]> swaps = StepSorts.quickSort(bars_copy, Comparator.naturalOrder(), n_cmprs);
+            label4.setText("Quick Sort (" + n_cmprs[0] + " comparisons, " + swaps.size() + " swaps)");
+            grapher.play(swaps);
         });
         JButton button_shuffle = new JButton("shuffle");
         button_shuffle.addActionListener((ActionEvent e) -> grapher.shuffle());
+        button_toggle_benchmarking = new JButton("Benchmarks");
+        button_toggle_benchmarking.addActionListener((ActionEvent e) -> {
+            viewBenchmarks();
+        });
+        button_toggle_sorting = new JButton("Sorting");
+        button_toggle_sorting.addActionListener((ActionEvent e) -> {
+            viewSorting();
+        });
 
         JSlider slider_n_elements = new JSlider(JSlider.HORIZONTAL, 5, 100, 15);
         slider_n_elements.setPreferredSize(new Dimension(135, 100));
@@ -213,42 +146,52 @@ class MainFrame extends JFrame
             grapher.setDelay(slider_delay_ms.getValue());
         });
 
-        var layout_group_hori = layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup()
+        GroupLayout.SequentialGroup layout_sorting_hori = layout_sorting.createSequentialGroup()
+            .addGroup(layout_sorting.createParallelGroup()
                     .addComponent(label)
                     .addComponent(button_pause)
-                    .addComponent(button)
+                    .addComponent(button_bubblesort)
                     .addComponent(button_heapsort)
+                    .addComponent(button_quicksort)
                     .addComponent(button_shuffle)
                     .addComponent(label2)
                     .addComponent(slider_n_elements, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addComponent(label3)
-                    .addComponent(slider_delay_ms, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-            .addGroup(layout.createParallelGroup()
+                    .addComponent(slider_delay_ms, 0, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(button_toggle_benchmarking)
+                    .addComponent(button_toggle_sorting))
+            .addGroup(layout_sorting.createParallelGroup()
                     .addComponent(label4)
-                    .addComponent(grapher, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+                    .addGroup(layout_sorting.createParallelGroup()
+                        .addComponent(benchmarker, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(grapher, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-        var layout_group_vert = layout.createSequentialGroup()
-            .addGroup(layout.createParallelGroup()
-                    .addGroup(layout.createSequentialGroup()
+        GroupLayout.SequentialGroup layout_sorting_vert = layout_sorting.createSequentialGroup()
+            .addGroup(layout_sorting.createParallelGroup()
+                    .addGroup(layout_sorting.createSequentialGroup()
                         .addComponent(label)
                         .addComponent(button_pause)
-                        .addComponent(button)
+                        .addComponent(button_bubblesort)
                         .addComponent(button_heapsort)
+                        .addComponent(button_quicksort)
                         .addComponent(button_shuffle)
                         .addComponent(label2)
                         .addComponent(slider_n_elements)
                         .addComponent(label3)
-                        .addComponent(slider_delay_ms))
-                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(slider_delay_ms)
+                        .addComponent(button_toggle_benchmarking)
+                        .addComponent(button_toggle_sorting))
+                    .addGroup(layout_sorting.createSequentialGroup()
                         .addComponent(label4)
-                        .addComponent(grapher, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+                        .addGroup(layout_sorting.createParallelGroup()
+                            .addComponent(benchmarker, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(grapher, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))));
 
-        layout.setHorizontalGroup(layout_group_hori);
-        layout.setVerticalGroup(layout_group_vert);
-
+        layout_sorting.setVerticalGroup(layout_sorting_vert);
+        layout_sorting.setHorizontalGroup(layout_sorting_hori);
         pack();
         setVisible(true);
+        viewSorting();
     }
 }
 
