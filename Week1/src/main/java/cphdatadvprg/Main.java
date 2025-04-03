@@ -5,6 +5,8 @@ import com.github.javafaker.Faker;
 import java.io.FileWriter;
 import java.io.File;
 import java.nio.file.*;
+import java.lang.reflect.Field;
+import java.util.concurrent.atomic.*;
 
 /*
  *
@@ -15,7 +17,7 @@ import java.nio.file.*;
 public class Main
 {
     static Faker name_gen = new Faker();
-    static Random rng = new Random(System.nanoTime());
+    // static Random rng = new Random(System.nanoTime());
 
     public static void main(String[] args)
     {
@@ -36,19 +38,19 @@ public class Main
 
         // javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI());
 
-        int sample_size = 10;
+        // int sample_size = 10;
 
-        MyHashMap<Person, Integer> person_map = new MyHashMap<>();
-        for (int i = 0; i < sample_size; i++) {
-            Person p = new Person(Utilities.fastRandomName(), Utilities.randomPositiveInt(100));
-            Integer val = Utilities.randomPositiveInt(100);
-            person_map.put(p, val);
-            Integer val_returned = person_map.get(p);
-            assert(val.equals(val_returned));
-        }
-        System.out.println(person_map.toString());
+        // MyHashMap<Person, Integer> person_map = new MyHashMap<>();
+        // for (int i = 0; i < sample_size; i++) {
+        //     Person p = new Person(Utilities.fastRandomName(), Utilities.randomPositiveInt(100));
+        //     Integer val = Utilities.randomPositiveInt(100);
+        //     person_map.put(p, val);
+        //     Integer val_returned = person_map.get(p);
+        //     assert(val.equals(val_returned));
+        // }
+        // System.out.println(person_map.toString());
 
-        benchmarkMyHashMap(10000, 25);
+        // benchmarkMyHashMap(10000, 25);
 
         // System.out.println(person_map.toString());
 
