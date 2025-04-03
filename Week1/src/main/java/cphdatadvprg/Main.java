@@ -2,7 +2,9 @@ package cphdatadvprg;
 
 import java.util.*;
 import com.github.javafaker.Faker;
-import java.security.MessageDigest;
+import java.io.FileWriter;
+import java.io.File;
+import java.nio.file.*;
 
 /*
  *
@@ -12,6 +14,9 @@ import java.security.MessageDigest;
 
 public class Main
 {
+    static Faker name_gen = new Faker();
+    static Random rng = new Random(System.nanoTime());
+
     public static void main(String[] args)
     {
         // Comparator<Integer> cmpr = Comparator.naturalOrder();
@@ -31,20 +36,77 @@ public class Main
 
         // javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI());
 
-        int sample_size = 1000000;
-        Random rng = new Random(System.nanoTime());
+        int sample_size = 10;
 
         MyHashMap<Person, Integer> person_map = new MyHashMap<>();
         for (int i = 0; i < sample_size; i++) {
-            person_map.put(new Person("eou" + i, 77), Math.abs(rng.nextInt()) % 10000);
-            // System.out.println(person_map.toString());
+            Person p = new Person(Utilities.fastRandomName(), Utilities.randomPositiveInt(100));
+            Integer val = Utilities.randomPositiveInt(100);
+            person_map.put(p, val);
+            Integer val_returned = person_map.get(p);
+            assert(val.equals(val_returned));
         }
+        System.out.println(person_map.toString());
+
+        benchmarkMyHashMap(10000, 25);
 
         // System.out.println(person_map.toString());
 
         // for (var ent : person_map.entrySet()) {
         //     System.out.printf("%s:%x%n", ent.getKey(), ent.getKey().hashCode());
         // }
+    }
+
+    private static void benchmarkMyHashMap(int increment, int n)
+    {
+        List<Integer[]> data_bucket_size = new ArrayList<>();
+        List<Long[]> data_time = new ArrayList<>();
+        for (int i = 1; i <= n; i++) {
+            System.out.printf("i: %d, samples: %d%n", i, increment * i);
+            MyHashMap<Person, Integer> person_map = new MyHashMap<>();
+            long ns_pre = System.nanoTime();
+            for (int j = 0; j < increment * i; j++) {
+                person_map.put(new Person(Utilities.fastRandomName(), Utilities.randomPositiveInt(100)),
+                            Utilities.randomPositiveInt(100));
+            }
+            long ns_post = System.nanoTime();
+            data_bucket_size.add(new Integer[] { increment * i, person_map.longest_bucket });
+            data_time.add(new Long[] { (long)increment * i, ns_post - ns_pre });
+        }
+
+        try {
+            Files.createDirectories(Paths.get("data"));
+            FileWriter output_writer;
+            String output_text;
+
+            output_text = "";
+            for (int i = 0; i < data_time.size(); i++) {
+                output_text += data_time.get(i)[0] + " ";
+            }
+            output_text += System.lineSeparator();
+            for (int i = 0; i < data_time.size(); i++) {
+                output_text += data_time.get(i)[1] + " ";
+            }
+            output_writer = new FileWriter("data/benchmarks_myhashmap_time.txt");
+            output_writer.write(output_text);
+            output_writer.close();
+
+            output_text = "";
+            for (int i = 0; i < data_bucket_size.size(); i++) {
+                output_text += data_bucket_size.get(i)[0] + " ";
+            }
+            output_text += System.lineSeparator();
+            for (int i = 0; i < data_bucket_size.size(); i++) {
+                output_text += data_bucket_size.get(i)[1] + " ";
+            }
+            output_writer = new FileWriter("data/benchmarks_myhashmap_bucketsize.txt");
+            output_writer.write(output_text);
+            output_writer.close();
+
+            System.out.printf("MyHashMap benchmark results output to folder: %s", Utilities.ls("data"));
+        } catch (Exception e) {
+            System.out.printf("In benchmarkMyHashMap(): %s%n", e.getMessage());
+        }
     }
 
     private static void createAndShowGUI()
@@ -98,91 +160,5 @@ class Person
     public String toString()
     {
         return "[" + name + ", " + age + "]";
-    }
-}
-
-class MyHashMap<K, V>
-{
-    int init_cap = 8;
-    int cap, size, insertions, collisions;
-    Vector<Entry<K, V>> entries;
-
-    public MyHashMap()
-    {
-        cap = init_cap;
-        entries = new Vector<>(cap);
-        entries.setSize(cap);
-    }
-
-    public int getLongestList()
-    {
-        int max = 0;
-        for (var ent : entries) {
-            int len = 0;
-            while (ent != null) {
-                ++len;
-                ent = ent.next;
-            }
-            max = Math.max(max, len);
-        }
-        return max;
-    }
-
-    public void put(K k, V v)
-    {
-        ++size; ++insertions;
-        float load_capacity = (float)size / cap;
-        if (load_capacity > 0.75f) {
-            System.out.printf("growing %d --> %d%n", cap, cap *= 2);
-            int old_cap = cap; cap *= 2; size = 0;
-            Vector<Entry<K, V>> old_list = entries;
-            entries = new Vector<>(cap);
-            entries.setSize(cap);
-            for (int i = 0; i < cap; i++) {
-                entries.add(null);
-            }
-            for (var ent : old_list) {
-                while (ent != null) {
-                    put(ent.key, ent.value);
-                    ent = ent.next;
-                }
-            }
-        }
-        int idx = Math.abs(k.hashCode()) % cap;
-        if (entries.get(idx) == null) {
-            entries.set(idx, new Entry<K, V>(k, v));
-        } else {
-            ++collisions;
-            Entry<K, V> ent = entries.get(idx);
-            while (ent.next != null) {
-                ent = ent.next;
-            }
-            ent.next = new Entry<K, V>(k, v);
-        }
-    }
-
-    @Override
-    public String toString()
-    {
-        String str = String.format("MyHashMap (size %d, cap %d, longest bucket: %d,  insertions: %d, collisions: %d [%d%%]) [\n",
-                size, cap, getLongestList(), insertions, collisions, (int) (100 * (float)collisions / insertions));
-        // for (var e : entries) {
-        //     str += "\t[";
-        //     while (e != null) {
-        //         str += "key:" + e.key + " | value:" + e.value + " ";
-        //         e = e.next;
-        //     }
-        //     str += "]\n";
-        // }
-        str += "]";
-        return str;
-    }
-
-    class Entry<K, V>
-    {
-        public K key;
-        public V value;
-        public Entry<K, V> prev, next;
-        public Entry(K k, V v) { key = k; value = v; }
     }
 }

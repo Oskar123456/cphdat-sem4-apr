@@ -13,6 +13,9 @@ import java.awt.geom.*;
 import java.awt.geom.Rectangle2D.Float;
 import java.awt.Graphics2D.*;
 import com.github.javafaker.Faker;
+import java.io.FileWriter;
+import java.io.File;
+import java.nio.file.*;
 
 /*
  *
@@ -22,6 +25,9 @@ import com.github.javafaker.Faker;
 
 public class Utilities
 {
+    static Faker name_gen = new Faker();
+    static Random rng = new Random(System.nanoTime());
+
     public static <T> void printArray(T[] a)
     {
         int len = a.length;
@@ -89,5 +95,34 @@ public class Utilities
             strs[j] = f.name().firstName();
         }
         return strs;
+    }
+
+    public static String ls(String dir_str)
+    {
+        String str = String.format("%s%n", dir_str);
+        File dir = new File(dir_str);
+        File[] directoryListing = dir.listFiles();
+        if (directoryListing != null) {
+            for (File child : directoryListing) {
+                str += String.format("\t%s%n", child.getName());
+            }
+        }
+        return str;
+    }
+
+    public static String fastRandomName()
+    {
+        char[] chars = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        String name = "";
+        int n = (rng.nextInt() % 20 + 20) % 20 + 5;
+        for (int i = 0; i < n; i++) {
+            name += chars[(rng.nextInt() % 26 + 26) % 26];
+        }
+        return name;
+    }
+
+    public static int randomPositiveInt(int mod)
+    {
+        return (rng.nextInt() % mod + mod) % mod;
     }
 }
