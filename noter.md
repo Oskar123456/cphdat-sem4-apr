@@ -18,6 +18,40 @@
 
 
 #### Structural
+
+##### Adapter
+##### Composite
+##### Decorator
+
+  - Wrapping classes/interfaces in new ones with added behavior, but still
+    implementing original functionality in some way.
+  - NOT ECS
+
+##### Singleton
+##### Proxy
+
 #### Behavioral
+
+##### Command
+
+  - Store behavior of object in its constructor; `Runnable(() -> { ... }), onClick(() -> { ... })`
+
+##### Strategy
+
+  - Class with interchangeable algorithm; `navigator.setMethod(shortestPath); navigator.navigate();`
+  - Switch behavior at runtime...
+
+##### Observer
+
 #### Creational
 
+##### Builder
+
+  ```java
+  myClass.newBuilder()
+    .name()
+    .age()
+    .build();
+  ```
+
+##### Factory
