@@ -147,4 +147,14 @@ public class Tools
         str += "]";
         return str;
     }
+
+    public static char[][] strToCharArray2D(String s)
+    {
+        String[] s_split = s.split("\n");
+        char[][] chars2D = new char[s_split.length][s_split[0].length()];
+        for (int i = 0; i < s_split.length; i++) {
+            chars2D[i] = s_split[i].toCharArray();
+        }
+        return chars2D;
+    }
 }
