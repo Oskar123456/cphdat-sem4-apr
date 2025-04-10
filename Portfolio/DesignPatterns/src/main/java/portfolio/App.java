@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * *********
  * *********
@@ -26,25 +28,52 @@ public class App
     {
         JavaCSG csg = JavaCSGFactory.createDefault();
 
-        double w = 10, l = 10, h = 10;
-        double step = 1;
+        double w = 5, l = 5, h = 100;
+        double scale = 35, s = 1;
 
-        List<Geometry3D> gs = new ArrayList<>();
-        Geometry3D p = csg.box3D(w, l, step, true);
-
-        int prec = 200;
-        for (int i = 2; i < prec; i++) {
-            Geometry3D g = csg.translate3D(csg.vector3D(0, 0, i * step))
-                    .transform(p);
-            g = csg.scale3D(prec * step - (i * step)).transform(g);
-            g = csg.rotate3DZ(csg.degrees((360.0 / (prec - 2)) * (i - 2))).transform(g);
-            gs.add(g);
+        List<Tower> towers = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                Vector3D pos = csg.vector3D(i * w * 2 * scale, j * l * 2 * scale, 0);
+                Tower t = new Tower(csg, pos, scale, w, l, h, 1);
+//                towers.add(t);
+            }
         }
 
-        Geometry3D ch = csg.union3D(gs);
+        int deg_step = 45;
+        double degs = 0, rad;
+        for (int i = 0; i < 25; i++) {
+            degs += rng.nextInt(deg_step) + deg_step;
+            rad = (w * 2) * (int)(1 + degs / 360) * scale;
+            double rads = degs * ((2 * Math.PI) / 360);
+            Vector3D pos = csg.vector3D(Math.cos(rads) * rad, Math.sin(rads) * rad, 0);
+            Tower t = new Tower(csg, pos, scale, w, l, h, 1);
+            towers.add(t);
+            System.out.printf("%s: %f %f%n", pos.toString(), degs, rad);
+        }
+        Geometry3D city = csg.union3D(towers.stream().map(t -> t.geom).toList());
 
-        csg.view(ch);
+        csg.view(city);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public static Vector3D eulerToVec(JavaCSG csg, double yaw, double pitch)
     {
